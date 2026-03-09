@@ -2,17 +2,34 @@
   (:require
    [ring.adapter.jetty :refer [run-jetty]]
    [clojure.edn :as edn]
-   [dist.server.executor :as executor]))
+   [dist.server.executor :as executor]
+   [dist.server.endpoints :as endpoints]))
+
 
 (defn handler [req]
 
-  (let [body (slurp (:body req))
-        task (edn/read-string body)
-        result (executor/execute-task task)]
+  (let [uri (:uri req)
+        body (slurp (:body req))
+        data (when (seq body) (edn/read-string body))]
 
-    {:status 200
-     :headers {"Content-Type" "application/edn"}
-     :body (pr-str result)}))
+    (case uri
+
+      "/submit"
+      (let [{:keys [promise]} (endpoints/submit-task data)
+            result @promise]
+        {:status 200
+         :body (pr-str result)})
+
+      "/steal"
+      {:status 200
+       :body (pr-str (endpoints/steal-task))}
+
+      "/result"
+      (do
+        (endpoints/complete-task data)
+        {:status 200
+         :body "ok"}))))
+
 
 (defn -main []
 
