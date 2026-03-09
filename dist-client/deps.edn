@@ -1,0 +1,7 @@
+{:paths ["src"]
+
+ :deps
+ {org.clojure/clojure {:mvn/version "1.11.1"}
+  clj-http/clj-http {:mvn/version "3.12.3"}
+
+  dist-dto {:local/root "../dist-dto"}}}
