@@ -10,6 +10,14 @@
 (defmacro defd
   [name args & body]
   `(do
+     (swap! registry assoc '~name (fn ~args ~@body))
+
+     (defn ~name ~args
+       ~@body)))
+
+(defmacro defde
+  [name args & body]
+  `(do
      (swap! registry assoc '~name '(fn ~args ~@body))
 
      (defn ~name [& params#]

@@ -1,42 +1,16 @@
-(ns dist.server.endpoints)
-
-(defonce task-queue (atom clojure.lang.PersistentQueue/EMPTY))
-(defonce task-promises (atom {}))
-(defonce workers (atom #{}))
+(ns dist.server.endpoints
+  (:require [dist.server.scheduler :as scheduler]))
 
 (defn submit-task [task]
-
-  (let [id (str (java.util.UUID/randomUUID))
-        p  (promise)]
-
-    (println "task")
-    (swap! task-promises assoc id p)
-    (println "swapped")
-    (swap! task-queue conj
-           {:id id
-            :task task})
-    (println "res")
-    {:task-id id
-     :promise p}))
+  (println "submit task")
+  (scheduler/submit-task task))
 
 (defn steal-task []
-  (let [q @task-queue]
+  (scheduler/steal-task))
 
-    (when (seq q)
+(defn complete-task [data]
+  (scheduler/complete-task data))
 
-      (let [task (peek q)]
-
-        (swap! task-queue pop)
-
-        task))))
-
-(defn complete-task [{:keys [id result]}]
-    (println "complete task")
-
-  (when-let [p (get @task-promises id)]
-
-    (deliver p result)
-
-    (swap! task-promises dissoc id)
-
-    :ok))
+(defn heartbeat [{:keys [id]}]
+  (scheduler/heartbeat id)
+  :ok)

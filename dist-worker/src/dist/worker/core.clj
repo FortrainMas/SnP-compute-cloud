@@ -4,28 +4,25 @@
      [clojure.edn :as edn]
      [dist.worker.executor :as executor]
      [dist.worker.scheduler :as scheduler]
-     [dist.worker.submit :as submit]))
+     [dist.worker.rpc :as rpc]))
 
 (defn worker-loop [id]
 
-  (let [local-q (scheduler/queues id)]
+  (while true
+    (if-let [task (scheduler/steal-from-cluster)]
 
-    (while true
+      (let [task-id (:id task)
+            stop-flag (atom false)
+            hb (rpc/start-heartbeat task-id stop-flag)]
 
-      (if-let [task (.pollLast local-q)]
+        (try
+          (let [result (executor/execute-task (:task task))]
+            (rpc/submit-result task-id result))
 
-        (submit/submit-result (:id task) (executor/execute-task (:task task)))
+          (finally
+            (reset! stop-flag true))))
 
-
-        (if-let [task (scheduler/steal-task id)]
-
-            (submit/submit-result (:id task) (executor/execute-task (:task task)))
-
-            (if-let [task (scheduler/steal-from-cluster)]
-
-              (submit/submit-result (:id task) (executor/execute-task (:task task)))
-
-              (Thread/sleep 1)))))))
+      (Thread/sleep 100))))
 
 (defn start-workers []
 
