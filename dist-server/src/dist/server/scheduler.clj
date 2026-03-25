@@ -26,23 +26,26 @@
     {:id id :promise p}))
 
 (defn steal-task []
-  (when-let [task (.poll pending-queue)]
-    (let [deadline (+ (now) TIMEOUT_MS)
-          id (:id task)]
+  (loop []
+    (when-let [task (.poll pending-queue)]
+      (let [id (:id task)]
+        (if-not (contains? @task-promises id)
+          ;; Stale task (already completed/cancelled), skip it.
+          (recur)
+          (let [deadline (+ (now) TIMEOUT_MS)]
+            (swap! in-flight assoc id (assoc task :deadline deadline))
 
-      (swap! in-flight assoc id (assoc task :deadline deadline))
+            (.schedule scheduler
+                       (fn []
+                         (when-let [t (get @in-flight id)]
+                           (when (< (:deadline t) (now))
+                             (println "Requeue task" id)
+                             (swap! in-flight dissoc id)
+                             (.add pending-queue (dissoc t :deadline)))))
+                       TIMEOUT_MS
+                       TimeUnit/MILLISECONDS)
 
-      (.schedule scheduler
-                 (fn []
-                   (when-let [t (get @in-flight id)]
-                     (when (< (:deadline t) (now))
-                       (println "Requeue task" id)
-                       (swap! in-flight dissoc id)
-                       (.add pending-queue (dissoc t :deadline)))))
-                 TIMEOUT_MS
-                 TimeUnit/MILLISECONDS)
-
-      task)))
+            task))))))
 
 (defn heartbeat [id]
   (println "heartbeat" id)
@@ -59,11 +62,5 @@
 
     (swap! task-promises dissoc id)
     (swap! in-flight dissoc id)
-
-    (let [remaining (remove #(= (:id %) id)
-                            (iterator-seq (.iterator pending-queue)))]
-      (.clear pending-queue)
-      (doseq [t remaining]
-        (.add pending-queue t)))
 
     :ok))

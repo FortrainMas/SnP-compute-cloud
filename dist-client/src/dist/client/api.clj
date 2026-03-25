@@ -1,6 +1,7 @@
 (ns dist.client.api
   (:require
-   [dist.client.rpc :as rpc]))
+   [dist.client.rpc :as rpc]
+   [dist.dto :as dto]))
 
 (def registry (atom {}))
 
@@ -47,3 +48,45 @@
      :fn '~f
      :args ~coll
      :registry @registry}))
+
+(defn jvm-call
+  [kind f & args]
+  (let [result (rpc/send-task
+                {:type :jvm-call
+                 :kind kind
+                 :fn-ser (dto/serialize-java f)
+                 :args-ser (mapv dto/serialize-java args)})]
+    (dto/deserialize-java result)))
+
+(defn jvm-mapd [f coll]
+  (let [result (rpc/send-task
+                {:type :jvm-stream
+                 :op :map
+                 :fn-ser (dto/serialize-java f)
+                 :items-ser (mapv dto/serialize-java coll)})]
+    (mapv dto/deserialize-java result)))
+
+(defn jvm-filterd [pred coll]
+  (let [result (rpc/send-task
+                {:type :jvm-stream
+                 :op :filter
+                 :fn-ser (dto/serialize-java pred)
+                 :items-ser (mapv dto/serialize-java coll)})]
+    (mapv dto/deserialize-java result)))
+
+(defn jvm-reduced
+  ([op coll]
+   (let [result (rpc/send-task
+                 {:type :jvm-stream
+                  :op :reduce
+                  :fn-ser (dto/serialize-java op)
+                  :items-ser (mapv dto/serialize-java coll)})]
+     (dto/deserialize-java result)))
+  ([op init coll]
+   (let [result (rpc/send-task
+                 {:type :jvm-stream
+                  :op :reduce
+                  :fn-ser (dto/serialize-java op)
+                  :identity-ser (dto/serialize-java init)
+                  :items-ser (mapv dto/serialize-java coll)})]
+     (dto/deserialize-java result))))
