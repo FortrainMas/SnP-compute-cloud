@@ -45,9 +45,11 @@ public class Main {
         List<Integer> squares = client.map(new SquareFn(), items);
         List<Integer> evens = client.filter(new EvenFn(), items);
         Integer sum = client.reduce(new SumOp(), 0, items);
+        Integer sumWithCombiner = client.reduce(new SumOp(), new SumOp(), 0, items);
 
         System.out.println("map result size: " + squares.size());
         System.out.println("filter result: " + evens);
         System.out.println("reduce result: " + sum);
+        System.out.println("reduce with explicit combiner result: " + sumWithCombiner);
     }
 }

@@ -71,4 +71,21 @@
                   :identity-ser (dto/serialize-java 0)
                   :items-ser (mapv dto/serialize-java [1 2 3 4])}
             result @(-> (endpoints/submit-task task) :promise)]
-        (is (= 10 (dto/deserialize-java result)))))))
+        (is (= 10 (dto/deserialize-java result)))))
+
+    (testing "jvm reduce supports explicit combiner for partial merges"
+      (let [acc (reify java.util.function.BinaryOperator
+                  java.io.Serializable
+                  (apply [_ a b] (* a b)))
+            combiner (reify java.util.function.BinaryOperator
+                       java.io.Serializable
+                       (apply [_ a b] (+ a b)))
+            task {:type :jvm-stream
+                  :op :reduce
+                  :fn-ser (dto/serialize-java acc)
+                  :combine-fn-ser (dto/serialize-java combiner)
+                  :identity-ser (dto/serialize-java 1)
+                  :items-ser (mapv dto/serialize-java [1 2 3 4])}
+            result @(-> (endpoints/submit-task task) :promise)]
+        ;; chunks [1 2] and [3 4] -> partials 2 and 12, then combined by + -> 14
+        (is (= 14 (dto/deserialize-java result)))))))

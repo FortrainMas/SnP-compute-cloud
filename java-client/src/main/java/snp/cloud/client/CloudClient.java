@@ -15,7 +15,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CloudClient {
     private static final IFn PR_STR = Clojure.var("clojure.core", "pr-str");
@@ -24,6 +26,7 @@ public class CloudClient {
     private static final Keyword K_TYPE = Keyword.intern("type");
     private static final Keyword K_OP = Keyword.intern("op");
     private static final Keyword K_FN_SER = Keyword.intern("fn-ser");
+    private static final Keyword K_COMBINE_FN_SER = Keyword.intern("combine-fn-ser");
     private static final Keyword K_ITEMS_SER = Keyword.intern("items-ser");
     private static final Keyword K_IDENTITY_SER = Keyword.intern("identity-ser");
     private static final Keyword K_REQUIRED_CLASSES = Keyword.intern("required-classes");
@@ -83,11 +86,21 @@ public class CloudClient {
     }
 
     public <T> T reduce(SerializableBinaryOperator<T> operator, T identity, List<T> items) {
-        PersistentVector requiredClasses = PersistentVector.create(CloudRequirements.resolveRequiredClasses(operator));
+        return reduce(operator, operator, identity, items);
+    }
+
+    public <T> T reduce(SerializableBinaryOperator<T> accumulator,
+                        SerializableBinaryOperator<T> combiner,
+                        T identity,
+                        List<T> items) {
+        Set<String> requiredClassSet = new LinkedHashSet<>(CloudRequirements.resolveRequiredClasses(accumulator));
+        requiredClassSet.addAll(CloudRequirements.resolveRequiredClasses(combiner));
+        PersistentVector requiredClasses = PersistentVector.create(requiredClassSet);
         IPersistentMap task = PersistentHashMap.create(
                 K_TYPE, V_JVM_STREAM,
                 K_OP, V_REDUCE,
-                K_FN_SER, SerializationUtils.serializeToBase64(operator),
+                K_FN_SER, SerializationUtils.serializeToBase64(accumulator),
+                K_COMBINE_FN_SER, SerializationUtils.serializeToBase64(combiner),
                 K_REQUIRED_CLASSES, requiredClasses,
                 K_IDENTITY_SER, SerializationUtils.serializeToBase64(identity),
                 K_ITEMS_SER, serializeList(items)

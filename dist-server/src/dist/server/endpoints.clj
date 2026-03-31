@@ -107,7 +107,7 @@
     :items-ser (vec chunk)
     :identity-ser identity-ser}))
 
-(defn- submit-jvm-reduce-task [{:keys [fn-ser items-ser identity-ser required-classes]}]
+(defn- submit-jvm-reduce-task [{:keys [fn-ser combine-fn-ser items-ser identity-ser required-classes]}]
   (let [items (vec (doall items-ser))]
     (case (count items)
       0 identity-ser
@@ -123,7 +123,9 @@
         (if (= 1 (count partials))
           (first partials)
           (let [{:keys [promise]}
-                (reduce-chunk-task fn-ser partials identity-ser required-classes)]
+                ;; Use a dedicated combiner for merging partial reductions when provided.
+                ;; Identity must not be re-applied at this stage.
+                (reduce-chunk-task (or combine-fn-ser fn-ser) partials nil required-classes)]
             @promise))))))
 
 (defn- submit-jvm-stream-task [{:keys [op] :as task}]

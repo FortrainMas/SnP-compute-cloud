@@ -101,6 +101,11 @@ clj
 - `jvm-filterd` — распределённый `filter`
 - `jvm-reduced` — распределённый `reduce` (с optional `init`)
 
+Для `:jvm-stream` `reduce` теперь поддерживается отдельный оператор объединения частичных результатов:
+
+- `:fn-ser` — accumulator для редукции внутри чанка;
+- `:combine-fn-ser` (опционально) — combiner для слияния partial-результатов между задачами.
+
 Пример в Clojure (для JVM-функциональных интерфейсов):
 
 ```clojure
@@ -159,6 +164,11 @@ mvn -q -Dmaven.repo.local=.m2 exec:java -Dexec.mainClass=snp.cloud.client.Main
 - `map` через `CloudClient.map(...)`
 - `filter` через `CloudClient.filter(...)`
 - `reduce` через `CloudClient.reduce(...)`
+
+Для Java также доступна перегрузка в стиле параллельного reduce:
+
+- `reduce(accumulator, identity, items)`
+- `reduce(accumulator, combiner, identity, items)`
 
 Важно для Java-лямбд:
 
