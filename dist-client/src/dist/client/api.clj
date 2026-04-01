@@ -65,11 +65,19 @@
           (apply concat))))
 
 (defmacro filterd [f coll]
-  `(rpc/send-task
-    {:type :filter
-     :fn '~f
-     :args ~coll
-     :registry @registry}))
+  `(let [chunks# (split-into 30 ~coll)
+         futures# (map (fn [chunk#]
+                         (future
+                           (rpc/send-task
+                             {:type :filter
+                              :fn '~f
+                              :args chunk#
+                              :registry @registry})))
+                       chunks#)]
+
+     (->> futures#
+          (map deref)
+          (apply concat))))
 
 (defmacro reduced [f coll]
   `(rpc/send-task
