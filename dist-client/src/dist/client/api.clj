@@ -28,12 +28,24 @@
          :args params#
          :registry @registry}))))
 
+(defn split-into [n coll]
+  (let [size (int (Math/ceil (/ (count coll) (double n))))]
+    (partition-all size coll)))
+
 (defmacro mapd [f coll]
-  `(rpc/send-task
-    {:type :map
-     :fn '~f
-     :args ~coll
-     :registry @registry}))
+  `(let [chunks# (split-into 30 ~coll)
+         futures# (map (fn [chunk#]
+                         (future
+                           (rpc/send-task
+                             {:type :map
+                              :fn '~f
+                              :args chunk#
+                              :registry @registry})))
+                       chunks#)]
+
+     (->> futures#
+          (map deref)
+          (apply concat))))
 
 (defmacro filterd [f coll]
   `(rpc/send-task

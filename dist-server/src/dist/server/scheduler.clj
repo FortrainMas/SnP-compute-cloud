@@ -25,27 +25,32 @@
     (.add pending-queue {:id id :task task})
     {:id id :promise p}))
 
+(defn dump-queue []
+  (println "QUEUE STATE:")
+  (doseq [t (.toArray pending-queue)]
+    (println " - " t)))
 (defn steal-task []
-  (loop []
-    (when-let [task (.poll pending-queue)]
-      (let [id (:id task)]
-        (if-not (contains? @task-promises id)
-          ;; Stale task (already completed/cancelled), skip it.
-          (recur)
-          (let [deadline (+ (now) TIMEOUT_MS)]
-            (swap! in-flight assoc id (assoc task :deadline deadline))
+  (dump-queue)
 
-            (.schedule scheduler
-                       (fn []
-                         (when-let [t (get @in-flight id)]
-                           (when (< (:deadline t) (now))
-                             (println "Requeue task" id)
-                             (swap! in-flight dissoc id)
-                             (.add pending-queue (dissoc t :deadline)))))
-                       TIMEOUT_MS
-                       TimeUnit/MILLISECONDS)
+  (when-let [task (.poll pending-queue)]
+    (let [id (:id task)
+          deadline (+ (now) TIMEOUT_MS)
+          task-with-deadline (assoc task :deadline deadline)]
 
-            task))))))
+      (swap! in-flight assoc id task-with-deadline)
+
+      (.schedule scheduler
+                 (fn []
+                   (let [t (get @in-flight id)]
+                     (when (and t (< (:deadline t) (now)))
+                       (println "timeout -> requeue" id)
+                       (swap! in-flight dissoc id)
+                       (.add pending-queue (dissoc t :deadline)))))
+                 TIMEOUT_MS
+                 TimeUnit/MILLISECONDS)
+
+      (println "given task" id)
+      task)))
 
 (defn heartbeat [id]
   (println "heartbeat" id)

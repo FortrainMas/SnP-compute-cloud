@@ -1,0 +1,350 @@
+SLF4J: No SLF4J providers were found.
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See https://www.slf4j.org/codes.html#noProviders for further details.
+executing task
+{:type :call, :fn square, :args [16], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [55], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [74], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [99], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [156], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [213], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [220], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [241], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [244], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [248], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [252], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [270], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [273], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [303], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [411], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [415], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [420], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [427], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [445], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [474], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [539], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [562], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [576], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [611], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [641], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [680], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [694], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [713], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [742], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [752], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [789], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [798], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [814], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [881], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [923], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [932], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [8], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [37], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [69], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [102], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [130], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [160], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [196], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [239], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [273], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [306], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [335], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [368], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [400], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [429], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [460], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [493], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [523], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+executing task
+{:type :call, :fn square, :args [555], :registry {square (clojure.core/fn [x] (* x x))}}
+submitting task
+???. 01, 2026 9:15:05 AM org.apache.http.impl.execchain.RetryExec execute
+INFO: I/O exception (java.net.SocketException) caught when processing request to {}->http://127.0.0.1:8080: Connection reset
+???. 01, 2026 9:15:05 AM org.apache.http.impl.execchain.RetryExec execute
+INFO: Retrying request to {}->http://127.0.0.1:8080
+executing task
+{:args (18), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (44), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (85), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (93), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (132), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (175), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (193), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (204), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (222), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (255), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (288), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (319), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (373), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (387), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (392), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (472), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (498), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (523), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (559), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (600), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (641), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (642), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (647), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (660), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (676), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (695), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (699), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (705), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (710), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (714), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (717), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (720), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (723), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (726), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (731), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (745), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (770), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (797), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (809), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (834), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (838), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (900), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (913), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (953), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (976), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1021), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1090), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1103), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1119), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1167), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1189), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1194), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1199), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1212), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1219), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1234), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1251), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1275), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+executing task
+{:args (1305), :fn square, :registry {square (clojure.core/fn [x] (* x x))}, :type :call}
+submitting task
+???. 01, 2026 9:16:32 AM org.apache.http.impl.execchain.RetryExec execute
+INFO: I/O exception (java.net.SocketException) caught when processing request to {}->http://127.0.0.1:8080: Connection reset
+???. 01, 2026 9:16:32 AM org.apache.http.impl.execchain.RetryExec execute
+INFO: Retrying request to {}->http://127.0.0.1:8080

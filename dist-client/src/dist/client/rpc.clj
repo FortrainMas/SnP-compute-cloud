@@ -10,3 +10,10 @@
                         {:body (pr-str task)
                          :headers {"Content-Type" "application/edn"}})]
     (edn/read-string (:body resp))))
+
+(defn send-task-async [task]
+  (future
+    (let [resp (http/post server-url
+                          {:body (pr-str task)
+                           :headers {"Content-Type" "application/edn"}})]
+      (edn/read-string (:body resp)))))

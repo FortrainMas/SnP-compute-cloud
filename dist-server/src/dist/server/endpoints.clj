@@ -9,7 +9,7 @@
   #{:call :map :filter :reduce :jvm-stream})
 
 (defn- task-cache-key [task]
-  ;; Cache key is derived from full task payload (function + args + registry).
+  ;; Cache key is derived from full task payload
   (hash (pr-str task)))
 
 (defn- await-promises [submitted]
@@ -17,30 +17,21 @@
           @promise)
         submitted))
 
-(defn- submit-map-task [{:keys [args registry] f :fn}]
-  (let [items (doall args)
-        submitted (mapv (fn [x]
-                          (scheduler/submit-task
-                           {:type :call
-                            :fn f
-                            :args [x]
-                            :registry registry}))
-                        items)]
-    (await-promises submitted)))
+;; -----------------------------
+;; SIMPLE TASKS (NO FAN-OUT)
+;; -----------------------------
 
-(defn- submit-filter-task [{:keys [args registry] f :fn}]
-  (let [items (doall args)
-        submitted (mapv (fn [x]
-                          (scheduler/submit-task
-                           {:type :call
-                            :fn f
-                            :args [x]
-                            :registry registry}))
-                        items)
-        decisions (await-promises submitted)]
-    (->> (map vector decisions items)
-         (filter first)
-         (mapv second))))
+(defn- submit-map-task [task]
+  (let [{:keys [promise]} (scheduler/submit-task task)]
+    @promise))
+
+(defn- submit-filter-task [task]
+  (let [{:keys [promise]} (scheduler/submit-task task)]
+    @promise))
+
+;; -----------------------------
+;; REDUCE (UNCHANGED LOGIC)
+;; -----------------------------
 
 (defn- chunk-size-for [n]
   (max 1 (long (Math/ceil (Math/sqrt (double (max 1 n)))))))
@@ -70,34 +61,17 @@
                   :registry registry})]
             @promise))))))
 
-(defn- submit-jvm-map-task [{:keys [fn-ser items-ser required-classes]}]
-  (let [items (vec (doall items-ser))
-        submitted (mapv (fn [item-ser]
-                          (scheduler/submit-task
-                           {:type :jvm-call
-                            :kind :function
-                            :fn-ser fn-ser
-                            :required-classes required-classes
-                            :args-ser [item-ser]
-                            :return-serialized? true}))
-                        items)]
-    (await-promises submitted)))
+;; -----------------------------
+;; JVM TASKS (SIMPLIFIED STYLE)
+;; -----------------------------
 
-(defn- submit-jvm-filter-task [{:keys [fn-ser items-ser required-classes]}]
-  (let [items (vec (doall items-ser))
-        submitted (mapv (fn [item-ser]
-                          (scheduler/submit-task
-                           {:type :jvm-call
-                            :kind :predicate
-                            :fn-ser fn-ser
-                            :required-classes required-classes
-                            :args-ser [item-ser]
-                            :return-serialized? false}))
-                        items)
-        decisions (await-promises submitted)]
-    (->> (map vector decisions items)
-         (filter first)
-         (mapv second))))
+(defn- submit-jvm-map-task [{:keys [fn-ser items-ser required-classes] :as task}]
+  (let [{:keys [promise]} (scheduler/submit-task task)]
+    @promise))
+
+(defn- submit-jvm-filter-task [{:keys [fn-ser items-ser required-classes] :as task}]
+  (let [{:keys [promise]} (scheduler/submit-task task)]
+    @promise))
 
 (defn- reduce-chunk-task [fn-ser chunk identity-ser required-classes]
   (scheduler/submit-task
@@ -123,8 +97,6 @@
         (if (= 1 (count partials))
           (first partials)
           (let [{:keys [promise]}
-                ;; Use a dedicated combiner for merging partial reductions when provided.
-                ;; Identity must not be re-applied at this stage.
                 (reduce-chunk-task (or combine-fn-ser fn-ser) partials nil required-classes)]
             @promise))))))
 
@@ -134,6 +106,10 @@
     :filter (submit-jvm-filter-task task)
     :reduce (submit-jvm-reduce-task task)
     (throw (ex-info "Unknown jvm stream op" {:op op}))))
+
+;; -----------------------------
+;; EXECUTION ROUTER
+;; -----------------------------
 
 (defn- execute-task-result [task]
   (case (:type task)
@@ -145,6 +121,10 @@
                 @promise)
     (let [{:keys [promise]} (scheduler/submit-task task)]
       @promise)))
+
+;; -----------------------------
+;; PUBLIC API
+;; -----------------------------
 
 (defn submit-task [task]
   (println "submit task")
