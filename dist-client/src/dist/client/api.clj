@@ -1,7 +1,24 @@
 (ns dist.client.api
   (:require
+   [clojure.string :as str]
    [dist.client.rpc :as rpc]
-   [dist.dto :as dto]))
+   [dist.dto :as dto])
+  (:import
+   [snp.cloud.client StreamSource]))
+
+(defn- assert-jvm-remote-safe!
+  "Сериализованный объект должен быть классом, который есть на воркере (тот же classpath).
+  Классы из REPL (reify, user$…) на воркере не найдутся."
+  [x label]
+  (when x
+    (let [n (.getName (class x))]
+      (when (or (str/starts-with? n "user$")
+                (str/includes? n "$reify"))
+        (throw (ex-info
+                (str label ": нельзя отправить на воркер класс " n " — это обычно reify/аноним из REPL. "
+                     "Используй скомпилированные классы snp.cloud.client.JvmFns (см. examples/e2e_stream_clojure.clj), "
+                     "Java CloudClient с лямбдами из того же jar, или Clojure mapd/defde без jvm-mapd.")
+                {:class n}))))))
 
 (def registry (atom {}))
 
@@ -63,6 +80,9 @@
 
 (defn jvm-call
   [kind f & args]
+  (assert-jvm-remote-safe! f "jvm-call fn")
+  (doseq [a args]
+    (assert-jvm-remote-safe! a "jvm-call arg"))
   (let [result (rpc/send-task
                 {:type :jvm-call
                  :kind kind
@@ -70,35 +90,68 @@
                  :args-ser (mapv dto/serialize-java args)})]
     (dto/deserialize-java result)))
 
-(defn jvm-mapd [f coll]
-  (let [result (rpc/send-task
-                {:type :jvm-stream
-                 :op :map
-                 :fn-ser (dto/serialize-java f)
-                 :items-ser (mapv dto/serialize-java coll)})]
+(defn jvm-mapd [f coll-or-source]
+  (assert-jvm-remote-safe! f "jvm-mapd")
+  (let [result (if (instance? StreamSource coll-or-source)
+                 (rpc/send-task
+                  {:type :jvm-stream
+                   :op :map
+                   :fn-ser (dto/serialize-java f)
+                   :stream-source-ser (dto/serialize-java coll-or-source)
+                   :items-ser []})
+                 (rpc/send-task
+                  {:type :jvm-stream
+                   :op :map
+                   :fn-ser (dto/serialize-java f)
+                   :items-ser (mapv dto/serialize-java coll-or-source)}))]
     (mapv dto/deserialize-java result)))
 
-(defn jvm-filterd [pred coll]
-  (let [result (rpc/send-task
-                {:type :jvm-stream
-                 :op :filter
-                 :fn-ser (dto/serialize-java pred)
-                 :items-ser (mapv dto/serialize-java coll)})]
+(defn jvm-filterd [pred coll-or-source]
+  (assert-jvm-remote-safe! pred "jvm-filterd")
+  (let [result (if (instance? StreamSource coll-or-source)
+                 (rpc/send-task
+                  {:type :jvm-stream
+                   :op :filter
+                   :fn-ser (dto/serialize-java pred)
+                   :stream-source-ser (dto/serialize-java coll-or-source)
+                   :items-ser []})
+                 (rpc/send-task
+                  {:type :jvm-stream
+                   :op :filter
+                   :fn-ser (dto/serialize-java pred)
+                   :items-ser (mapv dto/serialize-java coll-or-source)}))]
     (mapv dto/deserialize-java result)))
 
 (defn jvm-reduced
-  ([op coll]
-   (let [result (rpc/send-task
-                 {:type :jvm-stream
-                  :op :reduce
-                  :fn-ser (dto/serialize-java op)
-                  :items-ser (mapv dto/serialize-java coll)})]
+  ([op coll-or-source]
+   (assert-jvm-remote-safe! op "jvm-reduced")
+   (let [result (if (instance? StreamSource coll-or-source)
+                  (rpc/send-task
+                   {:type :jvm-stream
+                    :op :reduce
+                    :fn-ser (dto/serialize-java op)
+                    :stream-source-ser (dto/serialize-java coll-or-source)
+                    :items-ser []})
+                  (rpc/send-task
+                   {:type :jvm-stream
+                    :op :reduce
+                    :fn-ser (dto/serialize-java op)
+                    :items-ser (mapv dto/serialize-java coll-or-source)}))]
      (dto/deserialize-java result)))
-  ([op init coll]
-   (let [result (rpc/send-task
-                 {:type :jvm-stream
-                  :op :reduce
-                  :fn-ser (dto/serialize-java op)
-                  :identity-ser (dto/serialize-java init)
-                  :items-ser (mapv dto/serialize-java coll)})]
+  ([op init coll-or-source]
+   (assert-jvm-remote-safe! op "jvm-reduced")
+   (let [result (if (instance? StreamSource coll-or-source)
+                  (rpc/send-task
+                   {:type :jvm-stream
+                    :op :reduce
+                    :fn-ser (dto/serialize-java op)
+                    :identity-ser (dto/serialize-java init)
+                    :stream-source-ser (dto/serialize-java coll-or-source)
+                    :items-ser []})
+                  (rpc/send-task
+                   {:type :jvm-stream
+                    :op :reduce
+                    :fn-ser (dto/serialize-java op)
+                    :identity-ser (dto/serialize-java init)
+                    :items-ser (mapv dto/serialize-java coll-or-source)}))]
      (dto/deserialize-java result))))

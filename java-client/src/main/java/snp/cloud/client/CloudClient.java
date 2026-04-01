@@ -28,6 +28,7 @@ public class CloudClient {
     private static final Keyword K_FN_SER = Keyword.intern("fn-ser");
     private static final Keyword K_COMBINE_FN_SER = Keyword.intern("combine-fn-ser");
     private static final Keyword K_ITEMS_SER = Keyword.intern("items-ser");
+    private static final Keyword K_STREAM_SOURCE_SER = Keyword.intern("stream-source-ser");
     private static final Keyword K_IDENTITY_SER = Keyword.intern("identity-ser");
     private static final Keyword K_REQUIRED_CLASSES = Keyword.intern("required-classes");
 
@@ -59,6 +60,23 @@ public class CloudClient {
         return deserializeList(castToList(result));
     }
 
+    /**
+     * Элементы задаются переносимым {@link StreamSource} (в т.ч. после локального {@code Stream}).
+     */
+    public <T, R> List<R> map(SerializableFunction<T, R> function, StreamSource source) {
+        PersistentVector requiredClasses = PersistentVector.create(CloudRequirements.resolveRequiredClasses(function));
+        IPersistentMap task = PersistentHashMap.create(
+                K_TYPE, V_JVM_STREAM,
+                K_OP, V_MAP,
+                K_FN_SER, SerializationUtils.serializeToBase64(function),
+                K_REQUIRED_CLASSES, requiredClasses,
+                K_STREAM_SOURCE_SER, SerializationUtils.serializeToBase64(source),
+                K_ITEMS_SER, PersistentVector.EMPTY
+        );
+        Object result = sendTask(task);
+        return deserializeList(castToList(result));
+    }
+
     public <T> List<T> filter(SerializablePredicate<T> predicate, List<T> items) {
         PersistentVector requiredClasses = PersistentVector.create(CloudRequirements.resolveRequiredClasses(predicate));
         IPersistentMap task = PersistentHashMap.create(
@@ -67,6 +85,20 @@ public class CloudClient {
                 K_FN_SER, SerializationUtils.serializeToBase64(predicate),
                 K_REQUIRED_CLASSES, requiredClasses,
                 K_ITEMS_SER, serializeList(items)
+        );
+        Object result = sendTask(task);
+        return deserializeList(castToList(result));
+    }
+
+    public <T> List<T> filter(SerializablePredicate<T> predicate, StreamSource source) {
+        PersistentVector requiredClasses = PersistentVector.create(CloudRequirements.resolveRequiredClasses(predicate));
+        IPersistentMap task = PersistentHashMap.create(
+                K_TYPE, V_JVM_STREAM,
+                K_OP, V_FILTER,
+                K_FN_SER, SerializationUtils.serializeToBase64(predicate),
+                K_REQUIRED_CLASSES, requiredClasses,
+                K_STREAM_SOURCE_SER, SerializationUtils.serializeToBase64(source),
+                K_ITEMS_SER, PersistentVector.EMPTY
         );
         Object result = sendTask(task);
         return deserializeList(castToList(result));
@@ -85,8 +117,26 @@ public class CloudClient {
         return cast(SerializationUtils.deserializeFromBase64((String) result));
     }
 
+    public <T> T reduce(SerializableBinaryOperator<T> operator, StreamSource source) {
+        PersistentVector requiredClasses = PersistentVector.create(CloudRequirements.resolveRequiredClasses(operator));
+        IPersistentMap task = PersistentHashMap.create(
+                K_TYPE, V_JVM_STREAM,
+                K_OP, V_REDUCE,
+                K_FN_SER, SerializationUtils.serializeToBase64(operator),
+                K_REQUIRED_CLASSES, requiredClasses,
+                K_STREAM_SOURCE_SER, SerializationUtils.serializeToBase64(source),
+                K_ITEMS_SER, PersistentVector.EMPTY
+        );
+        Object result = sendTask(task);
+        return cast(SerializationUtils.deserializeFromBase64((String) result));
+    }
+
     public <T> T reduce(SerializableBinaryOperator<T> operator, T identity, List<T> items) {
         return reduce(operator, operator, identity, items);
+    }
+
+    public <T> T reduce(SerializableBinaryOperator<T> operator, T identity, StreamSource source) {
+        return reduce(operator, operator, identity, source);
     }
 
     public <T> T reduce(SerializableBinaryOperator<T> accumulator,
@@ -104,6 +154,27 @@ public class CloudClient {
                 K_REQUIRED_CLASSES, requiredClasses,
                 K_IDENTITY_SER, SerializationUtils.serializeToBase64(identity),
                 K_ITEMS_SER, serializeList(items)
+        );
+        Object result = sendTask(task);
+        return cast(SerializationUtils.deserializeFromBase64((String) result));
+    }
+
+    public <T> T reduce(SerializableBinaryOperator<T> accumulator,
+                        SerializableBinaryOperator<T> combiner,
+                        T identity,
+                        StreamSource source) {
+        Set<String> requiredClassSet = new LinkedHashSet<>(CloudRequirements.resolveRequiredClasses(accumulator));
+        requiredClassSet.addAll(CloudRequirements.resolveRequiredClasses(combiner));
+        PersistentVector requiredClasses = PersistentVector.create(requiredClassSet);
+        IPersistentMap task = PersistentHashMap.create(
+                K_TYPE, V_JVM_STREAM,
+                K_OP, V_REDUCE,
+                K_FN_SER, SerializationUtils.serializeToBase64(accumulator),
+                K_COMBINE_FN_SER, SerializationUtils.serializeToBase64(combiner),
+                K_REQUIRED_CLASSES, requiredClasses,
+                K_IDENTITY_SER, SerializationUtils.serializeToBase64(identity),
+                K_STREAM_SOURCE_SER, SerializationUtils.serializeToBase64(source),
+                K_ITEMS_SER, PersistentVector.EMPTY
         );
         Object result = sendTask(task);
         return cast(SerializationUtils.deserializeFromBase64((String) result));

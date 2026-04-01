@@ -100,12 +100,22 @@
                 (reduce-chunk-task (or combine-fn-ser fn-ser) partials nil required-classes)]
             @promise))))))
 
+(defn- stream-source-ser->items-ser [stream-source-ser]
+  (let [src (dto/deserialize-java stream-source-ser)
+        items (.materialize src)]
+    (mapv dto/serialize-java items)))
+
 (defn- submit-jvm-stream-task [{:keys [op] :as task}]
-  (case op
-    :map (submit-jvm-map-task task)
-    :filter (submit-jvm-filter-task task)
-    :reduce (submit-jvm-reduce-task task)
-    (throw (ex-info "Unknown jvm stream op" {:op op}))))
+  (let [task (if (and (= :reduce op) (:stream-source-ser task))
+               (-> task
+                   (assoc :items-ser (stream-source-ser->items-ser (:stream-source-ser task)))
+                   (dissoc :stream-source-ser))
+               task)]
+    (case op
+      :map (submit-jvm-map-task task)
+      :filter (submit-jvm-filter-task task)
+      :reduce (submit-jvm-reduce-task task)
+      (throw (ex-info "Unknown jvm stream op" {:op op})))))
 
 ;; -----------------------------
 ;; EXECUTION ROUTER

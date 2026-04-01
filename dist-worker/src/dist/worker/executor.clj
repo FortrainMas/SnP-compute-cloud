@@ -37,7 +37,11 @@
 
     :jvm-call
     (let [_ (dto/assert-required-classes! (:required-classes task))
-          f (dto/deserialize-java (:fn-ser task))
+          f (try
+              (dto/deserialize-java (:fn-ser task))
+              (catch ClassNotFoundException e
+                (println "jvm-call: ClassNotFoundException при fn-ser — не используй reify из REPL для удалённого JVM; см. JvmFns / Java-клиент.")
+                (throw e)))
           args (mapv dto/deserialize-java (:args-ser task))
           result (dto/invoke-jvm-call (:kind task) f args)]
       (if (:return-serialized? task)
@@ -46,7 +50,11 @@
 
     :jvm-reduce-chunk
     (let [_ (dto/assert-required-classes! (:required-classes task))
-          f (dto/deserialize-java (:fn-ser task))
+          f (try
+              (dto/deserialize-java (:fn-ser task))
+              (catch ClassNotFoundException e
+                (println "jvm-reduce-chunk: ClassNotFoundException при fn-ser — см. подсказку для jvm-stream (JvmFns, не reify в REPL).")
+                (throw e)))
           items (mapv dto/deserialize-java (:items-ser task))
           identity-value (dto/deserialize-java (:identity-ser task))
           reduced (if (empty? items)
@@ -60,5 +68,22 @@
                                 (dto/invoke-jvm-call :binary-operator f [acc x]))
                               items)))]
       (dto/serialize-java reduced))
+
+    :jvm-stream
+    (let [_ (dto/assert-required-classes! (:required-classes task))
+          op (:op task)
+          f (try
+              (dto/deserialize-java (:fn-ser task))
+              (catch ClassNotFoundException e
+                (println "jvm-stream: ClassNotFoundException при десериализации fn-ser — часто это reify из Clojure REPL (user$…). Используй snp.cloud.client.JvmFns.* и собери java-client.")
+                (throw e)))
+          items (if-let [ss (:stream-source-ser task)]
+                  (let [src (dto/deserialize-java ss)]
+                    (vec (.materialize src)))
+                  (mapv dto/deserialize-java (:items-ser task)))]
+      (case op
+        :map (mapv #(dto/serialize-java (dto/invoke-jvm-call :function f [%])) items)
+        :filter (mapv dto/serialize-java (filter #(boolean (dto/invoke-jvm-call :predicate f [%])) items))
+        :reduce (throw (Exception. "jvm-stream reduce is handled on server"))))
 
     (throw (Exception. "Unknown task type"))))

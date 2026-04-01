@@ -3,7 +3,9 @@
    [clojure.test :refer [deftest is testing]]
    [dist.dto :as dto]
    [dist.server.endpoints :as endpoints]
-   [dist.server.scheduler :as scheduler]))
+   [dist.server.scheduler :as scheduler])
+  (:import
+   [snp.cloud.client StreamSource]))
 
 (defn- resolved-result [task]
   (case (:type task)
@@ -30,6 +32,16 @@
                                 (dto/invoke-jvm-call :binary-operator f [acc x]))
                               items)))]
       (dto/serialize-java reduced))
+
+    :jvm-stream
+    (let [f (dto/deserialize-java (:fn-ser task))
+          items (if-let [ss (:stream-source-ser task)]
+                  (vec (.materialize (dto/deserialize-java ss)))
+                  (mapv dto/deserialize-java (:items-ser task)))]
+      (case (:op task)
+        :map (mapv #(dto/serialize-java (dto/invoke-jvm-call :function f [%])) items)
+        :filter (mapv dto/serialize-java (filter #(boolean (dto/invoke-jvm-call :predicate f [%])) items))
+        :reduce (throw (ex-info "reduce via jvm-stream is split into chunks in real scheduler" {:task task}))))
 
     (throw (ex-info "Unexpected task type in test stub" {:task task}))))
 
@@ -60,6 +72,19 @@
                   :items-ser (mapv dto/serialize-java [1 2 3 4 5 6])}
             result @(-> (endpoints/submit-task task) :promise)]
         (is (= [2 4 6] (mapv dto/deserialize-java result)))))
+
+    (testing "jvm map with StreamSource (int range)"
+      (let [f (reify java.util.function.Function
+                java.io.Serializable
+                (apply [_ x] (* x x)))
+            src (StreamSource/intRangeClosed 1 4)
+            task {:type :jvm-stream
+                  :op :map
+                  :fn-ser (dto/serialize-java f)
+                  :stream-source-ser (dto/serialize-java src)
+                  :items-ser []}
+            result @(-> (endpoints/submit-task task) :promise)]
+        (is (= [1 4 9 16] (mapv dto/deserialize-java result)))))
 
     (testing "jvm reduce supports identity"
       (let [op (reify java.util.function.BinaryOperator

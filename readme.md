@@ -34,11 +34,12 @@ clj
 В REPL
 
 ```clojure
-(require '[dist.client.api :refer :all])
-(defd square [x] (* x x))
+;; Лучше (:as cloud) вместо (:refer :all): макрос reduced из api перекрывает clojure.core/reduced.
+(require '[dist.client.api :as cloud :refer [defd defde]])
+(cloud/defd square [x] (* x x))
 (square 5)
 ;; 25
-(defd discriminant [a b c]
+(cloud/defd discriminant [a b c]
   (- (square b) (* 4 a c)))
 (discriminant 3 4 2)
 ;; -8
@@ -49,7 +50,7 @@ clj
 Запусти `server` и минимум 2 `worker` процесса в отдельных терминалах, затем в REPL клиента:
 
 ```clojure
-(require '[dist.client.api :refer :all])
+(require '[dist.client.api :as cloud :refer [defde mapd filterd reduced]])
 
 ;; Регистрируем функции в реестре клиента
 (defde slow-square [x]
@@ -106,42 +107,35 @@ clj
 - `:fn-ser` — accumulator для редукции внутри чанка;
 - `:combine-fn-ser` (опционально) — combiner для слияния partial-результатов между задачами.
 
-Пример в Clojure (для JVM-функциональных интерфейсов):
+Пример в Clojure (удалённое JVM, воркер десериализует код **того же класса**, что есть в `java-client/target/classes`):
 
 ```clojure
-(require '[dist.client.api :refer :all])
-(import '[java.util.function Function Predicate BinaryOperator])
+(require '[dist.client.api :as cloud])
+(import '[snp.cloud.client JvmFns$SquareInt JvmFns$EvenInt JvmFns$SumInt])
 
-(def square
-  (reify Function
-    (apply [_ x] (* x x))
-    java.io.Serializable))
-
-(def even?
-  (reify Predicate
-    (test [_ x] (zero? (mod x 2)))
-    java.io.Serializable))
-
-(def sum-op
-  (reify BinaryOperator
-    (apply [_ a b] (+ a b))
-    java.io.Serializable))
-
-(jvm-mapd square (range 1 6))
+(cloud/jvm-mapd (JvmFns$SquareInt.) (range 1 6))
 ;; => [1 4 9 16 25]
 
-(jvm-filterd even? (range 1 11))
+(cloud/jvm-filterd (JvmFns$EvenInt.) (range 1 11))
 ;; => [2 4 6 8 10]
 
-(jvm-reduced sum-op 0 (range 1 11))
+(cloud/jvm-reduced (JvmFns$SumInt.) 0 (range 1 11))
 ;; => 55
 ```
+
+**Почему нельзя `(reify Function ...)` в REPL для `jvm-mapd`:** сериализация запишет имя класса вроде `user$reify__2831`, этого класса нет на воркере → `ClassNotFoundException`. Для REPL используй скомпилированные типы (`JvmFns`) или чисто Clojure `mapd`/`defde`.
 
 Ограничения:
 
 - передаваемые объекты и функции должны быть `java.io.Serializable`;
-- для Java-лямбд используй serializable functional interfaces;
+- для Java-лямбд используй serializable functional interfaces **из того же JAR/classes, что подключены к воркеру**;
 - `jvm-mapd`/`jvm-filterd`/`jvm-reduced` работают через задачу типа `:jvm-stream`.
+
+Передача «как Stream» (без отправки самого `java.util.stream.Stream`):
+
+- В Java используй `StreamSource`: диапазон (`intRangeClosed`), материализация локального `Stream` (`fromStream`), список (`fromList`). В задаче уходит поле `:stream-source-ser`.
+- В Clojure передай вторым аргументом `(StreamSource/intRangeClosed 1 10)` и т.п. (нужен собранный `java-client/target/classes` в classpath клиента).
+- См. `snp.cloud.client.StreamPassDemo`.
 
 ### Java SDK (`java-client`)
 
@@ -159,6 +153,16 @@ mvn -q -DskipTests -Dmaven.repo.local=.m2 compile
 mvn -q -Dmaven.repo.local=.m2 exec:java -Dexec.mainClass=snp.cloud.client.Main
 ```
 
+Демонстрация Stream API (локально) + лямбды и ссылки на методы на `Serializable*`-интерфейсах (удалённо):
+
+```bash
+mvn -q -Dmaven.repo.local=.m2 exec:java -Dexec.mainClass=snp.cloud.client.StreamAndLambdaDemo
+# опционально: другой URL сервера
+# mvn -q -Dmaven.repo.local=.m2 exec:java -Dexec.mainClass=snp.cloud.client.StreamAndLambdaDemo -Dexec.args="http://host:8080/submit"
+```
+
+Скрипт для REPL Clojure (те же идеи): `examples/stream_lambda_demo.clj`.
+
 `Main` выполняет распределенные операции:
 
 - `map` через `CloudClient.map(...)`
@@ -175,3 +179,27 @@ mvn -q -Dmaven.repo.local=.m2 exec:java -Dexec.mainClass=snp.cloud.client.Main
 - перед запуском `worker` нужно собрать `java-client`, чтобы появились классы в `java-client/target/classes`;
 - `worker` должен запускаться с classpath, содержащим эти классы (в проекте это уже добавлено в `dist-worker/deps.edn`).
 - можно явно задать зависимости через аннотацию `@CloudRequires({MyHelper.class, ...})` на serializable-функции; клиент передаст `required-classes`, а воркер проверит наличие классов до выполнения.
+
+### E2E: проверить, что `StreamSource` + лямбды реально ходят по сети
+
+Нужны **1× server**, **минимум 1× worker** (лучше 2), заранее собранный **`java-client`** (`mvn compile`).
+
+**1. Терминалы инфраструктуры**
+
+```bash
+# терминал A
+cd dist-server && clj -M -m dist.server.core
+
+# терминал B (и при желании C)
+cd dist-worker && clj -M -m dist.worker.core
+```
+
+**2. Java: Stream API → `StreamSource` → удалённые map/filter/reduce**
+
+```bash
+cd java-client
+mvn -q -DskipTests -Dmaven.repo.local=.m2 compile
+mvn -q -Dmaven.repo.local=.m2 exec:java -Dexec.mainClass=snp.cloud.client.StreamPassDemo
+```
+
+Ожидаешь строки с результатами (квадраты, фильтр чётных, сумма, длины строк). Здесь же проверяются **лямбды** (`x -> x*x`) и **ссылки на методы** (`Integer::sum`, `String::length`).

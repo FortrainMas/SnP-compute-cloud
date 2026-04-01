@@ -5,3 +5,8 @@ general.md
 .clojure/
 **/target/
 java-client/.m2/
+
+.clj-kondo/
+.lsp/
+.metals/
+.vscode/
