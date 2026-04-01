@@ -1,3 +1,12 @@
 .cpcache
 general.md
 
+.m2/
+.clojure/
+**/target/
+java-client/.m2/
+
+.clj-kondo/
+.lsp/
+.metals/
+.vscode/

@@ -1,8 +1,13 @@
-{:paths ["src"]
+{:paths ["src" "../java-client/target/classes"]
 
  :deps
  {org.clojure/clojure {:mvn/version "1.11.1"}
   ring/ring-core {:mvn/version "1.12.1"}
   ring/ring-jetty-adapter {:mvn/version "1.12.1"}
 
-  dist-dto {:local/root "../dist-dto"}}}
+  dist-dto {:local/root "../dist-dto"}}
+
+ :aliases
+ {:test
+  {:extra-paths ["test"]
+   :main-opts ["-m" "dist.server.test-runner"]}}}

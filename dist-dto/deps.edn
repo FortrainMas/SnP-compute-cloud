@@ -1,1 +1,6 @@
-{:paths ["src"]}
+{:paths ["src"]
+
+ :aliases
+ {:test
+  {:extra-paths ["test"]
+   :main-opts ["-m" "dist.dto.test-runner"]}}}
