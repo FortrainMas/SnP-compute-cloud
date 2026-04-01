@@ -21,7 +21,6 @@ public class StreamAndLambdaDemo {
         String url = args.length > 0 ? args[0] : "http://localhost:8080/submit";
         CloudClient client = new CloudClient(url);
 
-        // --- 1) Данные через Stream API (локально) ---
         List<Integer> nums = IntStream.rangeClosed(1, 12)
                 .boxed()
                 .collect(Collectors.toList());
@@ -31,23 +30,19 @@ public class StreamAndLambdaDemo {
                 .map(String::toUpperCase)
                 .collect(Collectors.toList());
 
-        // --- 2) Лямбды на Serializable*-интерфейсах (удалённое выполнение) ---
         SerializableFunction<Integer, Integer> lambdaSquare = x -> x * x;
         SerializablePredicate<Integer> lambdaEven = n -> n % 2 == 0;
         SerializableBinaryOperator<Integer> lambdaSum = (a, b) -> a + b;
 
-        // --- 3) Ссылки на методы (тоже Serializable при наших интерфейсах) ---
         SerializableFunction<String, Integer> methodRefLen = String::length;
         SerializableBinaryOperator<Integer> methodRefSum = Integer::sum;
 
-        // --- 4) Локальная самопроверка сериализации (до HTTP) ---
         verifySerializable("lambda map", lambdaSquare);
         verifySerializable("lambda filter", lambdaEven);
         verifySerializable("lambda reduce", lambdaSum);
         verifySerializable("method ref map", methodRefLen);
         verifySerializable("method ref reduce", methodRefSum);
 
-        // --- 5) Удалённые map / filter / reduce ---
         List<Integer> squares = client.map(lambdaSquare, nums);
         List<Integer> evens = client.filter(lambdaEven, nums);
         Integer sum = client.reduce(lambdaSum, 0, nums);
@@ -63,7 +58,6 @@ public class StreamAndLambdaDemo {
         System.out.println("remote reduce (Integer::sum): " + sumMr);
         System.out.println("remote map (String::length): " + lengths);
 
-        // --- 6) Анонимный класс (всегда ок для демонстрации «не лямбда») ---
         SerializableFunction<Integer, Integer> anon = new SerializableFunction<Integer, Integer>() {
             @Override
             public Integer apply(Integer x) {
